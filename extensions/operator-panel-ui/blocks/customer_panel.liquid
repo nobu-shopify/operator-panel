@@ -1,0 +1,768 @@
+{% comment %}
+  Customer Information Panel for CS Operators
+  Provides a search interface to find and display customer information
+  Uses App Proxy to securely query the GraphQL Admin API
+  
+  This block is ONLY visible to CS operators.
+  Operators are identified by customer metafield: custom.is_operator = true
+{% endcomment %}
+
+{% if customer and customer.metafields.custom.is_operator.value == true %}
+<div class="operator-panel" id="operator-panel-{{ block.id }}" style="
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 24px;
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  border-radius: 16px;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+">
+  <!-- Header -->
+  <div style="
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  ">
+    <div style="
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+    ">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </div>
+    <div>
+      <h2 style="
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.02em;
+      ">{{ block.settings.panel_title }}</h2>
+      <p style="
+        margin: 2px 0 0 0;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+        letter-spacing: 0.05em;
+      ">{{ 'customer_panel.subtitle' | t }}</p>
+    </div>
+  </div>
+
+  <!-- Operator Info Section -->
+  <div style="
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  ">
+    <div style="
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    ">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <span style="
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 0.08em;
+      ">{{ 'customer_panel.operator_info_title' | t }}</span>
+    </div>
+    
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+      <div style="
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      ">
+        <span style="color: white; font-size: 14px; font-weight: 600;">
+          {{ customer.first_name | default: customer.email | slice: 0 | upcase }}
+        </span>
+      </div>
+      <div>
+        <div style="font-size: 14px; font-weight: 600; color: #ffffff;">
+          {{ customer.first_name }} {{ customer.last_name }}
+        </div>
+        <div style="font-size: 12px; color: rgba(255, 255, 255, 0.5);">
+          {{ customer.email }}
+        </div>
+      </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 12px;">
+      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffd93d" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_card_id' | t }}:</span>
+        <span style="font-weight: 500;">{{ customer.metafields.custom.card_id.value | default: '-' }}</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a29bfe" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <line x1="2" y1="10" x2="22" y2="10"></line>
+        </svg>
+        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_customer_id' | t }}:</span>
+        <span style="font-weight: 500;">{{ customer.metafields.custom.customer_id.value | default: '-' }}</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00b894" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_points' | t }}:</span>
+        <span style="font-weight: 500; color: #00b894;">{{ customer.metafields.custom.points.value | default: 0 }}</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#74b9ff" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_gender' | t }}:</span>
+        <span style="font-weight: 500;">{{ customer.metafields.custom.gender.value | default: '-' }}</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fd79a8" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_birthday' | t }}:</span>
+        <span style="font-weight: 500;">{{ customer.metafields.custom.birthday.value | default: '-' }}</span>
+      </div>
+      {% if customer.metafields.custom.operator_ordered_for_customer.value %}
+      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); grid-column: span 2; background: rgba(233, 69, 96, 0.15); padding: 8px 10px; border-radius: 6px; margin-top: 4px;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e94560" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="8.5" cy="7" r="4"></circle>
+          <line x1="20" y1="8" x2="20" y2="14"></line>
+          <line x1="23" y1="11" x2="17" y2="11"></line>
+        </svg>
+        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_ordered_for' | t }}:</span>
+        <span style="font-weight: 500; color: #e94560; font-size: 11px;">{{ customer.metafields.custom.operator_ordered_for_customer.value }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Search Form -->
+  <form id="customer-search-form-{{ block.id }}" style="display: flex; flex-direction: column; gap: 16px;">
+    <!-- Input Field -->
+    <div style="position: relative;">
+      <label for="customer-search-input-{{ block.id }}" style="
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 0.08em;
+        margin-bottom: 8px;
+      ">{{ 'customer_panel.search_label' | t }}</label>
+      <div style="position: relative;">
+        <input 
+          type="text" 
+          id="customer-search-input-{{ block.id }}"
+          name="customer_query"
+          placeholder="{{ block.settings.placeholder_text }}"
+          style="
+            width: 100%;
+            padding: 14px 16px 14px 44px;
+            font-size: 15px;
+            font-family: inherit;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+          "
+          onfocus="this.style.borderColor='rgba(233, 69, 96, 0.6)'; this.style.background='rgba(255, 255, 255, 0.08)'; this.style.boxShadow='0 0 0 3px rgba(233, 69, 96, 0.15)';"
+          onblur="this.style.borderColor='rgba(255, 255, 255, 0.1)'; this.style.background='rgba(255, 255, 255, 0.05)'; this.style.boxShadow='none';"
+        >
+        <svg style="
+          position: absolute;
+          left: 14px;
+          top: 50%;
+          transform: translateY(-50%);
+          opacity: 0.4;
+        " width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+      </div>
+      <p style="
+        margin: 8px 0 0 0;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.4);
+      ">{{ 'customer_panel.search_hint' | t }}</p>
+    </div>
+
+    <!-- Search Button -->
+    <button 
+      type="submit" 
+      id="find-customer-btn-{{ block.id }}"
+      style="
+        width: 100%;
+        padding: 14px 24px;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: inherit;
+        color: #ffffff;
+        background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(233, 69, 96, 0.3);
+        letter-spacing: 0.05em;
+      "
+      onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(233, 69, 96, 0.4)';"
+      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(233, 69, 96, 0.3)';"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      {{ block.settings.button_text }}
+    </button>
+  </form>
+
+  <!-- Loading Indicator -->
+  <div id="customer-loading-{{ block.id }}" style="
+    display: none;
+    margin-top: 20px;
+    padding: 20px;
+    text-align: center;
+  ">
+    <div style="
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #e94560;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    "></div>
+    <p style="
+      margin: 12px 0 0 0;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.6);
+    ">{{ 'customer_panel.loading' | t }}</p>
+  </div>
+
+  <!-- Results Container -->
+  <div id="customer-results-{{ block.id }}" style="
+    margin-top: 20px;
+    display: none;
+  ">
+    <!-- Results Header -->
+    <div id="results-header-{{ block.id }}" style="
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    ">
+      <span style="
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.6);
+        letter-spacing: 0.05em;
+      ">{{ 'customer_panel.search_results' | t }}</span>
+      <span id="results-count-{{ block.id }}" style="
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.4);
+      "></span>
+    </div>
+
+    <!-- Customer List -->
+    <div id="customer-list-{{ block.id }}" style="
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    "></div>
+
+    <!-- No Results Message -->
+    <div id="no-results-{{ block.id }}" style="
+      display: none;
+      padding: 24px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+    ">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" style="margin-bottom: 12px;">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+        <path d="M8 8l6 6M14 8l-6 6"></path>
+      </svg>
+      <p style="
+        margin: 0;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.5);
+      ">{{ 'customer_panel.no_results' | t }}</p>
+    </div>
+
+    <!-- Error Message -->
+    <div id="error-message-{{ block.id }}" style="
+      display: none;
+      padding: 16px;
+      background: rgba(233, 69, 96, 0.1);
+      border: 1px solid rgba(233, 69, 96, 0.3);
+      border-radius: 10px;
+    ">
+      <p id="error-text-{{ block.id }}" style="
+        margin: 0;
+        font-size: 13px;
+        color: #ff6b6b;
+      "></p>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .customer-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s ease;
+  }
+  
+  .customer-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+  }
+  
+  .import-btn {
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    color: #ffffff;
+    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  
+  .import-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 184, 148, 0.4);
+  }
+  
+  .import-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+</style>
+
+<script>
+(function() {
+  const blockId = '{{ block.id }}';
+  const form = document.getElementById('customer-search-form-' + blockId);
+  const input = document.getElementById('customer-search-input-' + blockId);
+  const loadingEl = document.getElementById('customer-loading-' + blockId);
+  const resultsEl = document.getElementById('customer-results-' + blockId);
+  const customerListEl = document.getElementById('customer-list-' + blockId);
+  const resultsCountEl = document.getElementById('results-count-' + blockId);
+  const noResultsEl = document.getElementById('no-results-' + blockId);
+  const errorEl = document.getElementById('error-message-' + blockId);
+  const errorTextEl = document.getElementById('error-text-' + blockId);
+  
+  // App Proxy URL - This will be configured in Shopify Admin
+  const appProxyUrl = '/apps/operator-panel/proxy/customers';
+  
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const query = input.value.trim();
+    
+    if (!query) {
+      showError('{{ "customer_panel.error_empty_query" | t }}');
+      return;
+    }
+    
+    // Show loading state
+    loadingEl.style.display = 'block';
+    resultsEl.style.display = 'none';
+    
+    try {
+      const response = await fetch(appProxyUrl + '?query=' + encodeURIComponent(query), {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+      
+      const data = await response.json();
+      
+      // Hide loading
+      loadingEl.style.display = 'none';
+      resultsEl.style.display = 'block';
+      
+      if (!data.success) {
+        showError(data.error || '{{ "customer_panel.error_generic" | t }}');
+        return;
+      }
+      
+      if (data.customers.length === 0) {
+        customerListEl.innerHTML = '';
+        noResultsEl.style.display = 'block';
+        errorEl.style.display = 'none';
+        resultsCountEl.textContent = '0件';
+        return;
+      }
+      
+      // Show results
+      noResultsEl.style.display = 'none';
+      errorEl.style.display = 'none';
+      resultsCountEl.textContent = data.customers.length + '件';
+      
+      // Render customer cards
+      customerListEl.innerHTML = data.customers.map(customer => createCustomerCard(customer)).join('');
+      
+    } catch (error) {
+      console.error('Search error:', error);
+      loadingEl.style.display = 'none';
+      resultsEl.style.display = 'block';
+      showError('{{ "customer_panel.error_network" | t }}');
+    }
+  });
+  
+  function showError(message) {
+    customerListEl.innerHTML = '';
+    noResultsEl.style.display = 'none';
+    errorEl.style.display = 'block';
+    errorTextEl.textContent = message;
+    resultsCountEl.textContent = '';
+  }
+  
+  function createCustomerCard(customer) {
+    const fullName = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || '名前未登録';
+    const email = customer.email || 'メール未登録';
+    const phone = customer.phone || '電話番号未登録';
+    const orders = customer.numberOfOrders || '0';
+    const spent = customer.amountSpent ? (customer.amountSpent.amount + ' ' + customer.amountSpent.currencyCode) : '¥0';
+    
+    // Custom metafields
+    const meta = customer.metafields || {};
+    const cardId = meta.cardId || '-';
+    const points = meta.points !== null ? meta.points.toLocaleString() : '-';
+    const gender = meta.gender || '-';
+    const customerId = meta.customerId || '-';
+    const birthday = meta.birthday ? formatDate(meta.birthday) : '-';
+    
+    return `
+      <div class="customer-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;">
+          <div style="flex: 1; min-width: 0;">
+            <!-- Customer Name -->
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+              <div style="
+                width: 32px;
+                height: 32px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+              ">
+                <span style="color: white; font-size: 13px; font-weight: 600;">
+                  ${(customer.firstName || customer.lastName || '?')[0].toUpperCase()}
+                </span>
+              </div>
+              <span style="font-size: 15px; font-weight: 600; color: #ffffff;">${escapeHtml(fullName)}</span>
+            </div>
+            
+            <!-- Basic Customer Details -->
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 13px; margin-bottom: 12px;">
+              <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                  <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(email)}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                </svg>
+                <span>${escapeHtml(phone)}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.5);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                  <line x1="3" y1="6" x2="21" y2="6"></line>
+                  <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+                <span>{{ 'customer_panel.meta_orders' | t }}: ${orders}件</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.5);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"></line>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                </svg>
+                <span>{{ 'customer_panel.meta_total_spent' | t }}: ${escapeHtml(spent)}</span>
+              </div>
+            </div>
+            
+            <!-- Custom Metafields Section -->
+            <div style="
+              background: rgba(255, 255, 255, 0.03);
+              border-radius: 8px;
+              padding: 12px;
+              border: 1px solid rgba(255, 255, 255, 0.06);
+            ">
+              <div style="
+                font-size: 10px;
+                font-weight: 600;
+                color: rgba(255, 255, 255, 0.4);
+                letter-spacing: 0.08em;
+                margin-bottom: 8px;
+              ">{{ 'customer_panel.metafields_title' | t }}</div>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 12px;">
+                <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffd93d" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_card_id' | t }}:</span>
+                  <span style="font-weight: 500;">${escapeHtml(cardId)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00b894" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                  <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_points' | t }}:</span>
+                  <span style="font-weight: 500; color: #00b894;">${escapeHtml(points)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#74b9ff" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                  <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_gender' | t }}:</span>
+                  <span style="font-weight: 500;">${escapeHtml(gender)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a29bfe" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <line x1="2" y1="10" x2="22" y2="10"></line>
+                  </svg>
+                  <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_customer_id' | t }}:</span>
+                  <span style="font-weight: 500;">${escapeHtml(customerId)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); grid-column: span 2;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fd79a8" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_birthday' | t }}:</span>
+                  <span style="font-weight: 500;">${escapeHtml(birthday)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Import Button -->
+          <button 
+            type="button" 
+            class="import-btn"
+            data-customer='${JSON.stringify(customer).replace(/'/g, "&#39;")}'
+          >
+            {{ 'customer_panel.import_button' | t }}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+  
+  function formatDate(dateString) {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      return date.getFullYear() + '/' + 
+        String(date.getMonth() + 1).padStart(2, '0') + '/' + 
+        String(date.getDate()).padStart(2, '0');
+    } catch (e) {
+      return dateString;
+    }
+  }
+  
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  
+  // Operator's customer ID for importing data
+  const operatorCustomerId = 'gid://shopify/Customer/{{ customer.id }}';
+  const importProxyUrl = '/apps/operator-panel/proxy/import-customer';
+  
+  // Event delegation for import buttons
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.import-btn');
+    if (btn && btn.dataset.customer) {
+      e.preventDefault();
+      console.log('[importCustomer] Button clicked, data-customer:', btn.dataset.customer);
+      window.importCustomer(btn.dataset.customer);
+    }
+  });
+  
+  // Global function to handle customer import
+  window.importCustomer = async function(customerJson) {
+    console.log('[importCustomer] Function called with:', customerJson);
+    const sourceCustomer = JSON.parse(customerJson);
+    console.log('[importCustomer] Parsed customer:', sourceCustomer);
+    
+    // Confirm before import
+    const customerName = [sourceCustomer.firstName, sourceCustomer.lastName].filter(Boolean).join(' ') || '名前未登録';
+    if (!confirm('{{ "customer_panel.import_confirm" | t }}\n\n' + customerName + ' のデータをあなたのアカウントに取り込みますか？')) {
+      return;
+    }
+    
+    // Find the button that was clicked and show loading state
+    const buttons = document.querySelectorAll('.import-btn');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    try {
+      console.log('[importCustomer] Sending request to:', importProxyUrl);
+      console.log('[importCustomer] Operator ID:', operatorCustomerId);
+      console.log('[importCustomer] Source customer:', sourceCustomer);
+      
+      const response = await fetch(importProxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify({
+          operatorCustomerId: operatorCustomerId,
+          sourceCustomer: sourceCustomer,
+        }),
+      });
+      
+      console.log('[importCustomer] Response status:', response.status);
+      console.log('[importCustomer] Response headers:', Object.fromEntries(response.headers.entries()));
+      
+      // Get response text first for debugging
+      const responseText = await response.text();
+      console.log('[importCustomer] Response text:', responseText);
+      
+      // Try to parse as JSON
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('[importCustomer] JSON parse error:', parseError);
+        console.error('[importCustomer] Raw response:', responseText);
+        alert('{{ "customer_panel.import_error" | t }}\n\nサーバーからの応答を解析できませんでした。');
+        return;
+      }
+      
+      if (!data.success) {
+        alert('{{ "customer_panel.import_error" | t }}\n\n' + (data.error || ''));
+        return;
+      }
+      
+      // Dispatch custom event for other scripts to listen to
+      const event = new CustomEvent('customerImported', { 
+        detail: { source: sourceCustomer, updated: data.customer },
+        bubbles: true 
+      });
+      document.dispatchEvent(event);
+      
+      // Show success message
+      alert('{{ "customer_panel.import_success" | t }}\n\n' + 
+        '取り込み元: ' + customerName + '\n' +
+        'カードID: ' + (sourceCustomer.metafields?.cardId || '-') + '\n' +
+        '顧客ID: ' + (sourceCustomer.metafields?.customerId || '-') + '\n' +
+        'ポイント: ' + (sourceCustomer.metafields?.points || 0) + '\n' +
+        '性別: ' + (sourceCustomer.metafields?.gender || '-') + '\n' +
+        '生年月日: ' + (sourceCustomer.metafields?.birthday || '-'));
+      
+      // Reload page to show updated operator info
+      window.location.reload();
+      
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('{{ "customer_panel.import_error" | t }}\n\n' + error.message);
+    } finally {
+      buttons.forEach(btn => btn.disabled = false);
+    }
+  };
+})();
+</script>
+{% endif %}
+
+{% schema %}
+{
+  "name": "顧客パネル",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "panel_title",
+      "label": "パネルタイトル",
+      "default": "顧客検索"
+    },
+    {
+      "type": "text",
+      "id": "placeholder_text",
+      "label": "検索プレースホルダー",
+      "default": "メール、電話番号、名前で検索"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "ボタンテキスト",
+      "default": "顧客を見つける"
+    }
+  ]
+}
+{% endschema %}

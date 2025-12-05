@@ -1,0 +1,36 @@
+{
+  "ratings": {
+    "stars": {
+      "label": "Ratings"
+    },
+    "home": {
+      "recommendationText": "Recommended Product!"
+    }
+  },
+  "customer_panel": {
+    "subtitle": "CS Operator Tools",
+    "operator_info_title": "Operator Info",
+    "search_label": "Customer Search",
+    "search_hint": "Example: email:\"test@example.com\" or first_name:John",
+    "search_results": "Search Results",
+    "results_placeholder": "Customer information will appear here",
+    "no_results": "No customers found",
+    "loading": "Searching...",
+    "import_button": "Import this customer",
+    "import_confirm": "Confirm customer data import",
+    "import_success": "Customer data imported",
+    "import_error": "Failed to import customer data",
+    "error_empty_query": "Please enter a search query",
+    "error_generic": "An error occurred",
+    "error_network": "Network error. Please try again.",
+    "metafields_title": "Custom Information",
+    "meta_orders": "Orders",
+    "meta_total_spent": "Total Spent",
+    "meta_card_id": "Card ID",
+    "meta_points": "Points",
+    "meta_gender": "Gender",
+    "meta_customer_id": "Customer ID",
+    "meta_birthday": "Birthday",
+    "meta_ordered_for": "Ordered For"
+  }
+}

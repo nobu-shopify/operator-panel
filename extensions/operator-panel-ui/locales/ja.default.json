@@ -1,0 +1,36 @@
+{
+  "ratings": {
+    "stars": {
+      "label": "評価"
+    },
+    "home": {
+      "recommendationText": "おすすめ商品！"
+    }
+  },
+  "customer_panel": {
+    "subtitle": "CSオペレーターツール",
+    "operator_info_title": "オペレーター情報",
+    "search_label": "顧客検索",
+    "search_hint": "例: email:\"test@example.com\" または first_name:田中",
+    "search_results": "検索結果",
+    "results_placeholder": "顧客情報がここに表示されます",
+    "no_results": "該当する顧客が見つかりませんでした",
+    "loading": "検索中...",
+    "import_button": "この顧客データを取り込む",
+    "import_confirm": "顧客データの取り込み確認",
+    "import_success": "顧客データを取り込みました",
+    "import_error": "顧客データの取り込みに失敗しました",
+    "error_empty_query": "検索キーワードを入力してください",
+    "error_generic": "エラーが発生しました",
+    "error_network": "ネットワークエラーが発生しました。もう一度お試しください。",
+    "metafields_title": "カスタム情報",
+    "meta_orders": "注文",
+    "meta_total_spent": "累計",
+    "meta_card_id": "カードID",
+    "meta_points": "ポイント",
+    "meta_gender": "性別",
+    "meta_customer_id": "顧客ID",
+    "meta_birthday": "生年月日",
+    "meta_ordered_for": "代理注文対象"
+  }
+}

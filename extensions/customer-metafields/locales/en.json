@@ -1,0 +1,17 @@
+{
+  "bannerTitle": "Customer Info",
+  "noCustomer": "Customer information is not available. Please log in.",
+  "customerName": "Customer Name",
+  "email": "Email",
+  "metafieldsTitle": "Member Information",
+  "cardId": "Card ID",
+  "customerId": "Customer ID",
+  "points": "Points",
+  "gender": "Gender",
+  "birthday": "Birthday",
+  "orderedFor": "Ordered For",
+  "addressApplied": "✓ Shipping address auto-filled",
+  "welcome": "Welcome to the {{target}} extension!",
+  "attributeChangesAreNotSupported": "Attribute changes are not supported in this checkout"
+}
+

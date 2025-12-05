@@ -1,0 +1,17 @@
+{
+  "bannerTitle": "顧客情報",
+  "noCustomer": "ログインしていないため、顧客情報を表示できません",
+  "customerName": "お客様名",
+  "email": "メールアドレス",
+  "metafieldsTitle": "会員情報",
+  "cardId": "カードID",
+  "customerId": "顧客ID",
+  "points": "ポイント",
+  "gender": "性別",
+  "birthday": "生年月日",
+  "orderedFor": "代理注文対象",
+  "addressApplied": "✓ 配送先住所を自動入力しました",
+  "welcome": "{{target}} エクステンションへようこそ！",
+  "attributeChangesAreNotSupported": "このチェックアウトでは属性の変更はサポートされていません"
+}
+
