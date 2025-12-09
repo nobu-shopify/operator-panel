@@ -1,0 +1,13 @@
+query CartPaymentMethodsTransformRunInput {
+  cart {
+    # Check if operator_name attribute is set
+    operatorName: attribute(key: "operator_name") {
+      key
+      value
+    }
+  }
+  paymentMethods {
+    id
+    name
+  }
+}

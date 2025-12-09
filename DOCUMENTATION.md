@@ -1,6 +1,6 @@
 # Operator Panel - Shopify Theme App Extension
 
-CSオペレーター向けの顧客情報管理パネル。オペレーターが顧客を検索し、その顧客のデータを自分のアカウントに取り込んで代理注文を行うためのShopify拡張機能。
+CSオペレーター向けの代理注文パネル。オペレーターが顧客を検索し、ゲストチェックアウトで代理注文を行うためのShopify拡張機能。
 
 ## 概要
 
@@ -13,28 +13,63 @@ CSオペレーター向けの顧客情報管理パネル。オペレーターが
 │  │  Theme App Extension │    │      Checkout UI Extension      ││
 │  │  (Operator Panel)    │    │     (Customer Metafields)       ││
 │  │                      │    │                                 ││
-│  │  • 顧客検索          │    │  • メタフィールド表示           ││
-│  │  • オペレーター情報  │    │  • 配送先住所自動入力           ││
-│  │  • データ取り込み    │    │                                 ││
+│  │  • 顧客検索          │    │  • カート属性から顧客情報表示   ││
+│  │  • オペレーター名入力│    │  • 配送先住所自動入力           ││
+│  │  • カート属性設定    │    │  • オペレーター注文表示         ││
 │  └──────────┬───────────┘    └────────────────┬────────────────┘│
 │             │                                 │                 │
 │             │        App Proxy                │                 │
-│             ▼                                 ▼                 │
+│             ▼                                 │                 │
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │                    Remix Backend                            ││
 │  │  • proxy.customers.jsx  (顧客検索API)                       ││
 │  │  • proxy.import-customer.jsx (データ取り込みAPI)            ││
 │  └─────────────────────────────────────────────────────────────┘│
 │                              │                                  │
-│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │                  Payment Function (cc-ivr)                  ││
+│  │  • オペレーター名がある場合のみ「クレカIVR」表示            ││
+│  └─────────────────────────────────────────────────────────────┘│
+│                              │                                  │
 │  ┌─────────────────────────────────────────────────────────────┐│
 │  │                 Shopify GraphQL Admin API                   ││
 │  │  • Customer Query                                           ││
-│  │  • Customer Update Mutation                                 ││
-│  │  • Metafields Delete Mutation                               ││
+│  │  • Payment Customization Mutations                          ││
 │  └─────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+## 主な機能
+
+### 1. ゲストモードでの代理注文
+
+オペレーターはログインせずに（ゲストモードで）顧客を検索し、代理注文を行えます。選択した顧客情報はカート属性として保存され、チェックアウト時に自動入力されます。
+
+### 2. カート属性による情報伝達
+
+顧客情報はカート属性として保存され、Checkout UI Extension で読み取られます：
+
+| 属性キー | 説明 |
+|----------|------|
+| `operator_name` | オペレーター名（必須：クレカIVR決済に必要） |
+| `operator_order_for_customer_id` | 対象顧客のShopify ID |
+| `operator_order_for_customer_email` | 対象顧客のメールアドレス |
+| `operator_order_for_customer_name` | 対象顧客の氏名 |
+| `operator_order_for_customer_phone` | 対象顧客の電話番号 |
+| `operator_order_for_card_id` | 会員カードID |
+| `operator_order_for_customer_code` | 顧客コード |
+| `operator_order_for_points` | ポイント残高 |
+| `operator_order_for_gender` | 性別 |
+| `operator_order_for_birthday` | 生年月日 |
+| `operator_order_shipping_address` | 配送先住所（JSON文字列） |
+
+### 3. 配送先住所の自動入力
+
+Checkout UI Extension が `operator_order_shipping_address` カート属性を読み取り、`shopify.applyShippingAddressChange()` APIで配送先を自動入力します。
+
+### 4. クレカIVR決済の条件付き表示
+
+Payment Function（cc-ivr）により、`operator_name` カート属性が設定されている場合のみ「クレカIVR」決済オプションが表示されます。
 
 ## ディレクトリ構成
 
@@ -42,41 +77,82 @@ CSオペレーター向けの顧客情報管理パネル。オペレーターが
 operator-panel/
 ├── app/
 │   └── routes/
-│       ├── proxy.customers.jsx      # 顧客検索 App Proxy
-│       └── proxy.import-customer.jsx # データ取り込み App Proxy
+│       ├── app.jsx                    # 管理画面レイアウト
+│       ├── app.payment-functions.jsx  # Payment Function管理画面
+│       ├── proxy.customers.jsx        # 顧客検索 App Proxy
+│       └── proxy.import-customer.jsx  # データ取り込み App Proxy
 ├── extensions/
-│   ├── operator-panel-ui/           # Theme App Extension
+│   ├── operator-panel-ui/             # Theme App Extension
 │   │   ├── blocks/
-│   │   │   └── customer_panel.liquid # メインUI
+│   │   │   └── customer_panel.liquid  # オペレーターパネルUI
 │   │   └── locales/
-│   │       ├── ja.default.json      # 日本語 (デフォルト)
-│   │       └── en.json              # 英語
-│   └── customer-metafields/         # Checkout UI Extension
+│   │       ├── ja.default.json        # 日本語 (デフォルト)
+│   │       └── en.json                # 英語
+│   ├── customer-metafields/           # Checkout UI Extension
+│   │   ├── src/
+│   │   │   └── Checkout.jsx           # チェックアウトUI
+│   │   └── locales/
+│   │       ├── ja.default.json
+│   │       └── en.json
+│   └── cc-ivr/                        # Payment Function
 │       ├── src/
-│       │   └── Checkout.jsx         # チェックアウトUI
-│       ├── locales/
-│       │   ├── ja.default.json
-│       │   └── en.json
+│       │   ├── cart_payment_methods_transform_run.js
+│       │   └── cart_payment_methods_transform_run.graphql
 │       └── shopify.extension.toml
-└── shopify.app.toml                 # アプリ設定
+└── shopify.app.toml                   # アプリ設定
+```
+
+## 機能フロー
+
+### 1. 顧客検索と選択
+
+```
+オペレーターがストアにアクセス（ログイン不要）
+        ↓
+オペレーターパネルが表示される
+        ↓
+オペレーター名を入力
+        ↓
+顧客を検索（メール、名前等）
+        ↓
+検索結果から顧客を選択
+        ↓
+「この顧客を選択」ボタンをクリック
+        ↓
+カート属性に顧客情報が設定される
+```
+
+### 2. チェックアウト
+
+```
+オペレーターがチェックアウトに進む
+        ↓
+Checkout UI Extension がロード
+        ↓
+カート属性から顧客情報を読み取り表示
+        ↓
+配送先住所を自動入力（applyShippingAddressChange）
+        ↓
+オペレーター名があれば「クレカIVR」決済が表示
+        ↓
+注文完了
+```
+
+### 3. Payment Function の動作
+
+```
+チェックアウト時に Payment Function が実行
+        ↓
+cart.attribute(key: "operator_name") を確認
+        ↓
+operator_name が存在 && 空でない
+    → クレカIVR を表示（何もしない）
+        ↓
+operator_name が存在しない || 空
+    → クレカIVR を非表示（paymentMethodHide）
 ```
 
 ## データ構造
-
-### Customer Metafields
-
-オペレーターおよび顧客に関連付けられるカスタムメタフィールド：
-
-| Namespace | Key | Type | 説明 |
-|-----------|-----|------|------|
-| `custom` | `card_id` | `single_line_text_field` | 会員カードID |
-| `custom` | `customer_id` | `single_line_text_field` | 顧客ID（外部システム連携用） |
-| `custom` | `points` | `number_integer` | ポイント残高 |
-| `custom` | `gender` | `single_line_text_field` | 性別（"男性", "女性", "回答せず"） |
-| `custom` | `birthday` | `date` | 生年月日 |
-| `custom` | `is_operator` | `boolean` | CSオペレーターフラグ |
-| `custom` | `operator_ordered_for_customer` | `single_line_text_field` | 代理注文対象の顧客ID |
-| `custom` | `shipping_address` | `json` | チェックアウト用配送先住所 |
 
 ### shipping_address JSON構造
 
@@ -87,8 +163,10 @@ operator-panel/
   "address1": "渋谷区渋谷1-1-1",
   "address2": "渋谷ビル101",
   "city": "渋谷区",
+  "province": "東京都",
   "provinceCode": "JP-13",
   "zip": "150-0001",
+  "country": "Japan",
   "countryCode": "JP",
   "phone": "03-1234-5678",
   "company": "株式会社サンプル"
@@ -109,27 +187,25 @@ operator-panel/
       "lastName": "山田",
       "email": "taro@example.com",
       "phone": "+81312345678",
-      "createdAt": "2024-01-01T00:00:00Z",
       "numberOfOrders": 5,
       "amountSpent": {
         "amount": "50000.00",
         "currencyCode": "JPY"
       },
       "defaultAddress": {
+        "firstName": "太郎",
+        "lastName": "山田",
         "address1": "渋谷区渋谷1-1-1",
         "address2": "渋谷ビル101",
         "city": "渋谷区",
-        "company": "株式会社サンプル",
-        "country": "Japan",
-        "countryCodeV2": "JP",
-        "firstName": "太郎",
-        "lastName": "山田",
-        "phone": "+81312345678",
         "province": "東京都",
         "provinceCode": "JP-13",
-        "zip": "150-0001"
+        "zip": "150-0001",
+        "country": "Japan",
+        "countryCodeV2": "JP",
+        "phone": "+81312345678",
+        "company": "株式会社サンプル"
       },
-      "tags": ["VIP", "リピーター"],
       "metafields": {
         "cardId": "CARD-001",
         "customerId": "CUS-12345",
@@ -143,113 +219,23 @@ operator-panel/
 }
 ```
 
-### データ取り込みAPIリクエスト
-
-`POST /apps/operator-panel/proxy/import-customer`
-
-```json
-{
-  "operatorCustomerId": "gid://shopify/Customer/987654321",
-  "sourceCustomer": {
-    "id": "gid://shopify/Customer/123456789",
-    "firstName": "太郎",
-    "lastName": "山田",
-    "defaultAddress": { ... },
-    "metafields": {
-      "cardId": "CARD-001",
-      "customerId": "CUS-12345",
-      "points": 1500,
-      "gender": "男性",
-      "birthday": "1990-01-15"
-    }
-  }
-}
-```
-
-## 機能フロー
-
-### 1. オペレーター認証
-
-```
-顧客がストアにログイン
-        ↓
-customer.metafields.custom.is_operator == true ?
-        ↓
-    Yes: オペレーターパネル表示
-    No:  パネル非表示
-```
-
-### 2. 顧客検索
-
-```
-オペレーターが検索クエリ入力
-        ↓
-App Proxy (proxy.customers.jsx)
-        ↓
-GraphQL Admin API で顧客検索
-        ↓
-顧客一覧をカード形式で表示
-```
-
-### 3. データ取り込み
-
-```
-「この顧客データを取り込む」ボタンクリック
-        ↓
-確認ダイアログ表示
-        ↓
-App Proxy (proxy.import-customer.jsx)
-        ↓
-オペレーターの Customer レコードを更新:
-  • メタフィールド (card_id, customer_id, points, gender, birthday)
-  • operator_ordered_for_customer (追跡用)
-  • shipping_address (チェックアウト用JSON)
-        ↓
-住所を customerAddressCreate で追加
-        ↓
-誕生日がない場合は metafieldsDelete で削除
-        ↓
-ページリロードで更新を反映
-```
-
-### 4. チェックアウト時の住所自動入力
-
-```
-オペレーターがチェックアウト開始
-        ↓
-Checkout UI Extension がロード
-        ↓
-shipping_address メタフィールドを読み取り
-        ↓
-shopify.applyShippingAddressChange() で配送先を自動入力
-        ↓
-「✓ 配送先住所を自動入力しました」メッセージ表示
-```
-
-## デフォルト値
-
-メタフィールドに値がない場合のデフォルト値：
-
-| フィールド | デフォルト値 |
-|-----------|-------------|
-| `card_id` | `"0"` |
-| `customer_id` | `"0"` |
-| `points` | `"0"` |
-| `gender` | `"回答せず"` |
-| `birthday` | メタフィールドを削除 |
-| `shipping_address` | `{}` (空オブジェクト) |
-
 ## 権限スコープ
 
 `shopify.app.toml`:
 
 ```toml
 [access_scopes]
-scopes = "write_products,read_customers,write_customers"
+scopes = "write_products,read_customers,write_customers,read_payment_customizations,write_payment_customizations,unauthenticated_read_checkouts,unauthenticated_write_checkouts"
 ```
 
-- `read_customers`: 顧客情報の読み取り
-- `write_customers`: 顧客メタフィールドの更新
+| スコープ | 用途 |
+|----------|------|
+| `read_customers` | 顧客情報の読み取り |
+| `write_customers` | 顧客メタフィールドの更新 |
+| `read_payment_customizations` | Payment Function の読み取り |
+| `write_payment_customizations` | Payment Function の登録・更新 |
+| `unauthenticated_read_checkouts` | チェックアウト情報の読み取り |
+| `unauthenticated_write_checkouts` | チェックアウト情報の書き込み |
 
 ## App Proxy設定
 
@@ -262,41 +248,44 @@ prefix = "apps"
 
 エンドポイント:
 - `GET /apps/operator-panel/proxy/customers` - 顧客検索
-- `POST /apps/operator-panel/proxy/import-customer` - データ取り込み
+- `POST /apps/operator-panel/proxy/import-customer` - データ取り込み（オペレーターログイン時）
 
-## Checkout UI Extension メタフィールド設定
+## Payment Function 設定
 
-`extensions/customer-metafields/shopify.extension.toml`:
+### 1. デプロイ
 
-```toml
-[[extensions.metafields]]
-namespace = "custom"
-key = "card_id"
-
-[[extensions.metafields]]
-namespace = "custom"
-key = "customer_id"
-
-[[extensions.metafields]]
-namespace = "custom"
-key = "points"
-
-[[extensions.metafields]]
-namespace = "custom"
-key = "gender"
-
-[[extensions.metafields]]
-namespace = "custom"
-key = "birthday"
-
-[[extensions.metafields]]
-namespace = "custom"
-key = "operator_ordered_for_customer"
-
-[[extensions.metafields]]
-namespace = "custom"
-key = "shipping_address"
+```bash
+shopify app deploy
 ```
+
+### 2. 登録
+
+管理画面の「Payment Functions」ページで「Register」ボタンをクリック、または GraphQL で登録：
+
+```graphql
+mutation {
+  paymentCustomizationCreate(paymentCustomization: {
+    title: "CC IVR - Operator Only"
+    functionHandle: "cart-payment-methods-transform-run"
+    enabled: true
+  }) {
+    paymentCustomization {
+      id
+      title
+      enabled
+    }
+    userErrors {
+      field
+      message
+    }
+  }
+}
+```
+
+### 3. 動作確認
+
+- オペレーター名を入力して顧客を選択 → チェックアウトで「クレカIVR」が表示される
+- オペレーター名なしでチェックアウト → 「クレカIVR」が非表示
 
 ## 国際化 (i18n)
 
@@ -306,31 +295,48 @@ key = "shipping_address"
 - 日本語 (`ja.default.json`)
 - 英語 (`en.json`)
 
-## セキュリティ考慮事項
-
-1. **オペレーター認証**: `is_operator` メタフィールドで制御
-2. **App Proxy認証**: `authenticate.public.appProxy()` で認証
-3. **CORS設定**: 適切なヘッダーを設定
-4. **Protected Customer Data**: Shopifyの保護された顧客データ要件に準拠
-
 ## 開発コマンド
 
 ```bash
 # 開発サーバー起動
-npm run dev
+shopify app dev
 
 # 拡張機能のデプロイ
-npm run deploy
+shopify app deploy
 
-# 型チェック
-npm run typecheck
+# Payment Function テスト
+cd extensions/cc-ivr && npm test
 ```
 
-## 今後の改善案
+## 注意事項
 
-- [ ] 請求先住所の自動入力対応
-- [ ] 複数顧客の一括取り込み
-- [ ] 取り込み履歴の表示
-- [ ] オペレーター操作ログ
-- [ ] 顧客検索のフィルター機能強化
+### メールアドレスの手動入力
 
+現在、チェックアウト時のメールアドレスは自動入力されません。オペレーターが手動で入力する必要があります。
+
+※ Shopify Checkout UI Extensions API には、メールフィールドをプログラムで設定する機能がありません。
+
+### Payment Function のデプロイ
+
+Payment Function は `shopify app dev` では動作しません。本番環境で使用するには `shopify app deploy` でデプロイが必要です。
+
+## トラブルシューティング
+
+### クレカIVRが表示されない
+
+1. Payment Function がデプロイされているか確認
+2. Payment Customization が登録・有効化されているか確認（管理画面 > Payment Functions）
+3. オペレーター名が入力されているか確認
+4. CLI ログで `[cc-ivr] Operator order detected` メッセージを確認
+
+### 配送先住所が自動入力されない
+
+1. 顧客に `defaultAddress` が設定されているか確認
+2. Checkout UI Extension が正しくロードされているか確認
+3. ブラウザコンソールでエラーを確認
+
+### 顧客検索ができない
+
+1. App Proxy の URL 設定を確認
+2. `shopify.app.toml` の app_proxy 設定を確認
+3. 開発サーバーが起動しているか確認

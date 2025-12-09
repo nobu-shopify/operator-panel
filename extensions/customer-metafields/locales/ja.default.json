@@ -1,9 +1,19 @@
 {
   "bannerTitle": "顧客情報",
   "noCustomer": "ログインしていないため、顧客情報を表示できません",
+  "guestCheckoutTitle": "ゲストチェックアウト",
+  "guestCheckoutNotice": "顧客を選択するには、オペレーターパネルで検索してください",
+  "operatorOrderTitle": "オペレーター代理注文",
+  "operatorOrderNotice": "このチェックアウトはオペレーターが顧客の代わりに行っています",
+  "operatorName": "オペレーター名",
+  "operatorNameNotSet": "（未入力）",
   "customerName": "お客様名",
   "email": "メールアドレス",
+  "emailManualEntry": "↑ 上記のメールアドレスを連絡先に入力してください",
+  "phone": "電話番号",
+  "shippingAddress": "配送先住所",
   "metafieldsTitle": "会員情報",
+  "shopifyCustomerId": "Shopify顧客ID",
   "cardId": "カードID",
   "customerId": "顧客ID",
   "points": "ポイント",
@@ -11,6 +21,7 @@
   "birthday": "生年月日",
   "orderedFor": "代理注文対象",
   "addressApplied": "✓ 配送先住所を自動入力しました",
+  "emailApplied": "✓ メールアドレスを自動入力しました",
   "welcome": "{{target}} エクステンションへようこそ！",
   "attributeChangesAreNotSupported": "このチェックアウトでは属性の変更はサポートされていません"
 }
