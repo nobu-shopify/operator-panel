@@ -7,7 +7,6 @@ embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
-include_config_on_deploy = true
 
 [webhooks]
 api_version = "2026-01"
@@ -22,7 +21,7 @@ api_version = "2026-01"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products,read_customers,write_customers"
+scopes = "write_products,read_customers,write_customers,read_payment_customizations,write_payment_customizations,unauthenticated_read_checkouts,unauthenticated_write_checkouts"
 
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]
@@ -30,6 +29,6 @@ redirect_urls = [ "https://example.com/api/auth" ]
 [app_proxy]
 # App Proxy configuration for Theme App Extension to call backend API
 # Configure this in Shopify Admin > Apps > Your App > App Proxy
-url = "https://threatened-saturday-night-elected.trycloudflare.com/"
+url = "https://author-plays-ebooks-vat.trycloudflare.com/"
 subpath = "operator-panel"
 prefix = "apps"

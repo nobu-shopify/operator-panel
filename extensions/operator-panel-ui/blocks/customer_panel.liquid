@@ -1,13 +1,13 @@
 {% comment %}
-  Customer Information Panel for CS Operators
+  Customer Information Panel for CS Operators (Guest Mode)
   Provides a search interface to find and display customer information
   Uses App Proxy to securely query the GraphQL Admin API
   
-  This block is ONLY visible to CS operators.
-  Operators are identified by customer metafield: custom.is_operator = true
+  This block is ONLY visible when operators are NOT logged in (guest checkout mode).
+  Operators can search for customers and pass their information via cart attributes.
 {% endcomment %}
 
-{% if customer and customer.metafields.custom.is_operator.value == true %}
+{% unless customer %}
 <div class="operator-panel" id="operator-panel-{{ block.id }}" style="
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
   max-width: 600px;
@@ -61,8 +61,102 @@
     </div>
   </div>
 
-  <!-- Operator Info Section -->
+  <!-- Operator Name Input (Optional - used for クレカIVR payment method visibility) -->
   <div style="
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.15) 0%, rgba(255, 152, 0, 0.15) 100%);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  ">
+    <label for="operator-name-input-{{ block.id }}" style="
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    ">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffc107" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      {{ 'customer_panel.operator_name_label' | t }}
+    </label>
+    <input 
+      type="text" 
+      id="operator-name-input-{{ block.id }}"
+      name="operator_name"
+      placeholder="{{ 'customer_panel.operator_name_placeholder' | t }}"
+      style="
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 14px;
+        font-family: inherit;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 193, 7, 0.4);
+        border-radius: 8px;
+        outline: none;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+      "
+      onfocus="this.style.borderColor='rgba(255, 193, 7, 0.8)'; this.style.background='rgba(255, 255, 255, 0.1)'; this.style.boxShadow='0 0 0 3px rgba(255, 193, 7, 0.2)';"
+      onblur="this.style.borderColor='rgba(255, 193, 7, 0.4)'; this.style.background='rgba(255, 255, 255, 0.08)'; this.style.boxShadow='none';"
+    >
+    <p style="
+      margin: 8px 0 0 0;
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.5);
+    ">{{ 'customer_panel.operator_name_hint' | t }}</p>
+  </div>
+
+  <!-- Guest Operator Mode Banner -->
+  <div style="
+    background: linear-gradient(135deg, rgba(0, 184, 148, 0.15) 0%, rgba(0, 206, 201, 0.15) 100%);
+    border: 1px solid rgba(0, 184, 148, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+  ">
+    <div style="
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    ">
+      <div style="
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      ">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="8.5" cy="7" r="4"></circle>
+          <line x1="20" y1="8" x2="20" y2="14"></line>
+          <line x1="23" y1="11" x2="17" y2="11"></line>
+        </svg>
+      </div>
+      <div>
+        <div style="font-size: 14px; font-weight: 600; color: #ffffff;">
+          {{ 'customer_panel.guest_mode_title' | t }}
+        </div>
+        <div style="font-size: 12px; color: rgba(255, 255, 255, 0.6); margin-top: 2px;">
+          {{ 'customer_panel.guest_mode_description' | t }}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Selected Customer Info (hidden by default, shown when customer is selected) -->
+  <div id="selected-customer-info-{{ block.id }}" style="
+    display: none;
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
     border: 1px solid rgba(102, 126, 234, 0.3);
     border-radius: 12px;
@@ -72,103 +166,34 @@
     <div style="
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: space-between;
       margin-bottom: 12px;
     ">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-        <circle cx="12" cy="7" r="4"></circle>
-      </svg>
-      <span style="
-        font-size: 11px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.6);
-        letter-spacing: 0.08em;
-      ">{{ 'customer_panel.operator_info_title' | t }}</span>
-    </div>
-    
-    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-      <div style="
-        width: 36px;
-        height: 36px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-      ">
-        <span style="color: white; font-size: 14px; font-weight: 600;">
-          {{ customer.first_name | default: customer.email | slice: 0 | upcase }}
-        </span>
-      </div>
-      <div>
-        <div style="font-size: 14px; font-weight: 600; color: #ffffff;">
-          {{ customer.first_name }} {{ customer.last_name }}
-        </div>
-        <div style="font-size: 12px; color: rgba(255, 255, 255, 0.5);">
-          {{ customer.email }}
-        </div>
-      </div>
-    </div>
-    
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 12px;">
-      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffd93d" stroke-width="2">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_card_id' | t }}:</span>
-        <span style="font-weight: 500;">{{ customer.metafields.custom.card_id.value | default: '-' }}</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a29bfe" stroke-width="2">
-          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-          <line x1="2" y1="10" x2="22" y2="10"></line>
-        </svg>
-        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_customer_id' | t }}:</span>
-        <span style="font-weight: 500;">{{ customer.metafields.custom.customer_id.value | default: '-' }}</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00b894" stroke-width="2">
-          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-        </svg>
-        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_points' | t }}:</span>
-        <span style="font-weight: 500; color: #00b894;">{{ customer.metafields.custom.points.value | default: 0 }}</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#74b9ff" stroke-width="2">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
-        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_gender' | t }}:</span>
-        <span style="font-weight: 500;">{{ customer.metafields.custom.gender.value | default: '-' }}</span>
+        <span style="
+          font-size: 11px;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.6);
+          letter-spacing: 0.08em;
+        ">{{ 'customer_panel.selected_customer_title' | t }}</span>
       </div>
-      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fd79a8" stroke-width="2">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_birthday' | t }}:</span>
-        <span style="font-weight: 500;">{{ customer.metafields.custom.birthday.value | default: '-' }}</span>
-      </div>
-      {% if customer.metafields.custom.operator_ordered_for_customer.value %}
-      <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7); grid-column: span 2; background: rgba(233, 69, 96, 0.15); padding: 8px 10px; border-radius: 6px; margin-top: 4px;">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#e94560" stroke-width="2">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="8.5" cy="7" r="4"></circle>
-          <line x1="20" y1="8" x2="20" y2="14"></line>
-          <line x1="23" y1="11" x2="17" y2="11"></line>
-        </svg>
-        <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_ordered_for' | t }}:</span>
-        <span style="font-weight: 500; color: #e94560; font-size: 11px;">{{ customer.metafields.custom.operator_ordered_for_customer.value }}</span>
-      </div>
-      {% endif %}
+      <button id="clear-selected-customer-{{ block.id }}" type="button" style="
+        padding: 4px 8px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      ">{{ 'customer_panel.clear_selection' | t }}</button>
     </div>
+    
+    <div id="selected-customer-details-{{ block.id }}"></div>
   </div>
 
   <!-- Search Form -->
@@ -609,13 +634,13 @@
             </div>
           </div>
           
-          <!-- Import Button -->
+          <!-- Select Button -->
           <button 
             type="button" 
-            class="import-btn"
+            class="import-btn select-customer-btn"
             data-customer='${JSON.stringify(customer).replace(/'/g, "&#39;")}'
           >
-            {{ 'customer_panel.import_button' | t }}
+            {{ 'customer_panel.select_button' | t }}
           </button>
         </div>
       </div>
@@ -640,105 +665,301 @@
     return div.innerHTML;
   }
   
-  // Operator's customer ID for importing data
-  const operatorCustomerId = 'gid://shopify/Customer/{{ customer.id }}';
-  const importProxyUrl = '/apps/operator-panel/proxy/import-customer';
+  // Selected customer info elements
+  const selectedCustomerInfoEl = document.getElementById('selected-customer-info-' + blockId);
+  const selectedCustomerDetailsEl = document.getElementById('selected-customer-details-' + blockId);
+  const clearSelectionBtn = document.getElementById('clear-selected-customer-' + blockId);
   
-  // Event delegation for import buttons
+  // Operator name input
+  const operatorNameInput = document.getElementById('operator-name-input-' + blockId);
+  
+  // Store selected customer data
+  let selectedCustomer = null;
+  
+  // Event delegation for select buttons
   document.addEventListener('click', function(e) {
     const btn = e.target.closest('.import-btn');
     if (btn && btn.dataset.customer) {
       e.preventDefault();
-      console.log('[importCustomer] Button clicked, data-customer:', btn.dataset.customer);
-      window.importCustomer(btn.dataset.customer);
+      console.log('[selectCustomer] Button clicked, data-customer:', btn.dataset.customer);
+      window.selectCustomerForOrder(btn.dataset.customer);
     }
   });
   
-  // Global function to handle customer import
-  window.importCustomer = async function(customerJson) {
-    console.log('[importCustomer] Function called with:', customerJson);
-    const sourceCustomer = JSON.parse(customerJson);
-    console.log('[importCustomer] Parsed customer:', sourceCustomer);
+  // Clear selection button handler
+  if (clearSelectionBtn) {
+    clearSelectionBtn.addEventListener('click', function() {
+      clearSelectedCustomer();
+    });
+  }
+  
+  // Global function to select customer for guest order
+  window.selectCustomerForOrder = async function(customerJson) {
+    console.log('[selectCustomer] Function called with:', customerJson);
     
-    // Confirm before import
-    const customerName = [sourceCustomer.firstName, sourceCustomer.lastName].filter(Boolean).join(' ') || '名前未登録';
-    if (!confirm('{{ "customer_panel.import_confirm" | t }}\n\n' + customerName + ' のデータをあなたのアカウントに取り込みますか？')) {
-      return;
-    }
+    // Get operator name (optional - can be blank for testing)
+    const operatorName = operatorNameInput ? operatorNameInput.value.trim() : '';
     
-    // Find the button that was clicked and show loading state
-    const buttons = document.querySelectorAll('.import-btn');
-    buttons.forEach(btn => btn.disabled = true);
+    selectedCustomer = JSON.parse(customerJson);
+    console.log('[selectCustomer] Parsed customer:', selectedCustomer);
+    console.log('[selectCustomer] Operator name:', operatorName);
     
+    const customerName = [selectedCustomer.firstName, selectedCustomer.lastName].filter(Boolean).join(' ') || '名前未登録';
+    
+    // Show selected customer info
+    displaySelectedCustomer(selectedCustomer);
+    
+    // Update cart attributes with selected customer info (includes operator name)
     try {
-      console.log('[importCustomer] Sending request to:', importProxyUrl);
-      console.log('[importCustomer] Operator ID:', operatorCustomerId);
-      console.log('[importCustomer] Source customer:', sourceCustomer);
-      
-      const response = await fetch(importProxyUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: JSON.stringify({
-          operatorCustomerId: operatorCustomerId,
-          sourceCustomer: sourceCustomer,
-        }),
-      });
-      
-      console.log('[importCustomer] Response status:', response.status);
-      console.log('[importCustomer] Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      // Get response text first for debugging
-      const responseText = await response.text();
-      console.log('[importCustomer] Response text:', responseText);
-      
-      // Try to parse as JSON
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('[importCustomer] JSON parse error:', parseError);
-        console.error('[importCustomer] Raw response:', responseText);
-        alert('{{ "customer_panel.import_error" | t }}\n\nサーバーからの応答を解析できませんでした。');
-        return;
-      }
-      
-      if (!data.success) {
-        alert('{{ "customer_panel.import_error" | t }}\n\n' + (data.error || ''));
-        return;
-      }
+      await updateCartAttributes(selectedCustomer, operatorName);
       
       // Dispatch custom event for other scripts to listen to
-      const event = new CustomEvent('customerImported', { 
-        detail: { source: sourceCustomer, updated: data.customer },
+      const event = new CustomEvent('customerSelected', { 
+        detail: { customer: selectedCustomer, operatorName: operatorName },
         bubbles: true 
       });
       document.dispatchEvent(event);
       
-      // Show success message
-      alert('{{ "customer_panel.import_success" | t }}\n\n' + 
-        '取り込み元: ' + customerName + '\n' +
-        'カードID: ' + (sourceCustomer.metafields?.cardId || '-') + '\n' +
-        '顧客ID: ' + (sourceCustomer.metafields?.customerId || '-') + '\n' +
-        'ポイント: ' + (sourceCustomer.metafields?.points || 0) + '\n' +
-        '性別: ' + (sourceCustomer.metafields?.gender || '-') + '\n' +
-        '生年月日: ' + (sourceCustomer.metafields?.birthday || '-'));
-      
-      // Reload page to show updated operator info
-      window.location.reload();
+      // Show success notification
+      showNotification('{{ "customer_panel.select_success" | t }}', 'success');
       
     } catch (error) {
-      console.error('Import error:', error);
-      alert('{{ "customer_panel.import_error" | t }}\n\n' + error.message);
-    } finally {
-      buttons.forEach(btn => btn.disabled = false);
+      console.error('Selection error:', error);
+      showNotification('{{ "customer_panel.select_error" | t }}: ' + error.message, 'error');
     }
   };
+  
+  // Display selected customer in the info panel
+  function displaySelectedCustomer(customer) {
+    const fullName = [customer.firstName, customer.lastName].filter(Boolean).join(' ') || '名前未登録';
+    const email = customer.email || 'メール未登録';
+    const meta = customer.metafields || {};
+    
+    selectedCustomerDetailsEl.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <div style="
+          width: 36px;
+          height: 36px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        ">
+          <span style="color: white; font-size: 14px; font-weight: 600;">
+            ${(customer.firstName || customer.lastName || '?')[0].toUpperCase()}
+          </span>
+        </div>
+        <div>
+          <div style="font-size: 14px; font-weight: 600; color: #ffffff;">${escapeHtml(fullName)}</div>
+          <div style="font-size: 12px; color: rgba(255, 255, 255, 0.5);">${escapeHtml(email)}</div>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 12px;">
+        <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffd93d" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_card_id' | t }}:</span>
+          <span style="font-weight: 500;">${escapeHtml(meta.cardId || '-')}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00b894" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_points' | t }}:</span>
+          <span style="font-weight: 500; color: #00b894;">${meta.points !== null ? meta.points.toLocaleString() : '-'}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a29bfe" stroke-width="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+            <line x1="2" y1="10" x2="22" y2="10"></line>
+          </svg>
+          <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_customer_id' | t }}:</span>
+          <span style="font-weight: 500;">${escapeHtml(meta.customerId || '-')}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.7);">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fd79a8" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <span style="color: rgba(255,255,255,0.5);">{{ 'customer_panel.meta_birthday' | t }}:</span>
+          <span style="font-weight: 500;">${escapeHtml(meta.birthday ? formatDate(meta.birthday) : '-')}</span>
+        </div>
+      </div>
+    `;
+    
+    selectedCustomerInfoEl.style.display = 'block';
+  }
+  
+  // Clear selected customer
+  function clearSelectedCustomer() {
+    selectedCustomer = null;
+    selectedCustomerInfoEl.style.display = 'none';
+    selectedCustomerDetailsEl.innerHTML = '';
+    
+    // Clear cart attributes
+    clearCartAttributes();
+    
+    showNotification('{{ "customer_panel.selection_cleared" | t }}', 'info');
+  }
+  
+  // Update cart attributes with customer data for checkout
+  async function updateCartAttributes(customer, operatorName) {
+    const meta = customer.metafields || {};
+    const addr = customer.defaultAddress || {};
+    
+    // Build shipping address object for checkout
+    const shippingAddress = {
+      firstName: addr.firstName || customer.firstName || '',
+      lastName: addr.lastName || customer.lastName || '',
+      address1: addr.address1 || '',
+      address2: addr.address2 || '',
+      city: addr.city || '',
+      province: addr.province || '',
+      provinceCode: addr.provinceCode || '',
+      country: addr.country || 'Japan',
+      countryCode: addr.countryCodeV2 || 'JP',
+      zip: addr.zip || '',
+      phone: addr.phone || customer.phone || '',
+      company: addr.company || '',
+    };
+    
+    const attributes = {
+      // Operator info - this is used by Payment Functions to show/hide payment options
+      'operator_name': operatorName || '',
+      // Customer info
+      'operator_order_for_customer_id': customer.id || '',
+      'operator_order_for_customer_email': customer.email || '',
+      'operator_order_for_customer_name': [customer.firstName, customer.lastName].filter(Boolean).join(' ') || '',
+      'operator_order_for_customer_phone': customer.phone || '',
+      'operator_order_for_card_id': meta.cardId || '',
+      'operator_order_for_customer_code': meta.customerId || '',
+      'operator_order_for_points': meta.points !== null ? String(meta.points) : '',
+      'operator_order_for_gender': meta.gender || '',
+      'operator_order_for_birthday': meta.birthday || '',
+      // Store the full shipping address as JSON
+      'operator_order_shipping_address': JSON.stringify(shippingAddress),
+    };
+    
+    console.log('[updateCartAttributes] Setting attributes:', attributes);
+    console.log('[updateCartAttributes] Operator name:', operatorName);
+    console.log('[updateCartAttributes] Shipping address:', shippingAddress);
+    
+    const response = await fetch('/cart/update.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ attributes }),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to update cart attributes');
+    }
+    
+    const data = await response.json();
+    console.log('[updateCartAttributes] Cart updated:', data);
+    
+    return data;
+  }
+  
+  // Clear cart attributes
+  async function clearCartAttributes() {
+    const attributes = {
+      'operator_name': '',
+      'operator_order_for_customer_id': '',
+      'operator_order_for_customer_email': '',
+      'operator_order_for_customer_name': '',
+      'operator_order_for_customer_phone': '',
+      'operator_order_for_card_id': '',
+      'operator_order_for_customer_code': '',
+      'operator_order_for_points': '',
+      'operator_order_for_gender': '',
+      'operator_order_for_birthday': '',
+      'operator_order_shipping_address': '',
+    };
+    
+    try {
+      await fetch('/cart/update.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ attributes }),
+      });
+    } catch (error) {
+      console.error('[clearCartAttributes] Error:', error);
+    }
+  }
+  
+  // Show notification toast
+  function showNotification(message, type) {
+    // Remove existing notification
+    const existing = document.getElementById('operator-notification');
+    if (existing) existing.remove();
+    
+    const colors = {
+      success: { bg: 'rgba(0, 184, 148, 0.9)', border: '#00b894' },
+      error: { bg: 'rgba(233, 69, 96, 0.9)', border: '#e94560' },
+      info: { bg: 'rgba(102, 126, 234, 0.9)', border: '#667eea' },
+    };
+    
+    const color = colors[type] || colors.info;
+    
+    const notification = document.createElement('div');
+    notification.id = 'operator-notification';
+    notification.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 14px 20px;
+      background: ${color.bg};
+      border: 1px solid ${color.border};
+      border-radius: 10px;
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      z-index: 10000;
+      animation: slideIn 0.3s ease-out;
+    `;
+    notification.textContent = message;
+    
+    // Add animation styles if not exists
+    if (!document.getElementById('notification-styles')) {
+      const style = document.createElement('style');
+      style.id = 'notification-styles';
+      style.textContent = `
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+          from { transform: translateX(0); opacity: 1; }
+          to { transform: translateX(100%); opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  }
 })();
 </script>
-{% endif %}
+{% endunless %}
 
 {% schema %}
 {
